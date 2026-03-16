@@ -425,11 +425,16 @@ export default function App() {
             </button>
           ))}
         </div>
-        <a href="https://ziksatech-ops.vercel.app/#hub" target="_blank" rel="noopener"
-          style={{ fontSize: 12, color: "#1e3a5f", textDecoration: "none" }}
-          onMouseEnter={e => e.currentTarget.style.color = "#38bdf8"}
-          onMouseLeave={e => e.currentTarget.style.color = "#1e3a5f"}>
-          ← Ziksatech Portal
+        <a href="https://ziksatech-ops.vercel.app" target="_blank" rel="noopener"
+          style={{ textDecoration: "none", display: "flex", alignItems: "center", gap: 7,
+            padding: "7px 16px", borderRadius: 8,
+            background: "linear-gradient(135deg,#0D1B2A,#1a2d45)",
+            border: "1px solid #C9A84C44",
+            fontSize: 12, fontWeight: 700, color: "#C9A84C",
+            transition: "all 0.15s", whiteSpace: "nowrap" }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = "#C9A84C"; e.currentTarget.style.background = "linear-gradient(135deg,#1a2d45,#0c2340)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "#C9A84C44"; e.currentTarget.style.background = "linear-gradient(135deg,#0D1B2A,#1a2d45)"; }}>
+          <span style={{ fontSize: 14 }}>⚡</span> Team Portal
         </a>
       </nav>
 
