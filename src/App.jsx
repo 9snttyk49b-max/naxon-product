@@ -194,6 +194,181 @@ ${product ? `The user is currently viewing the ${product === "gridmind" ? "Gridm
 }
 
 // ── Main App ─────────────────────────────────────────────────────────────────
+// ── GridMind ROI Calculator ───────────────────────────────────────────────────
+const GRIDMIND_PRESETS = {
+  "Electric Utility":  {outages:48,avgOutageCost:180000,operators:42,ticketsMonth:3200,compliance:250000,contract:1200000},
+  "Gas Utility":       {outages:32,avgOutageCost:120000,operators:28,ticketsMonth:2100,compliance:180000,contract:900000},
+  "Water Utility":     {outages:24,avgOutageCost:80000, operators:18,ticketsMonth:1400,compliance:120000,contract:650000},
+  "Telecom":           {outages:96,avgOutageCost:240000,operators:65,ticketsMonth:8500,compliance:150000,contract:1800000},
+  "Manufacturing":     {outages:60,avgOutageCost:95000, operators:35,ticketsMonth:2800,compliance:80000, contract:850000},
+  "Healthcare":        {outages:20,avgOutageCost:200000,operators:55,ticketsMonth:4200,compliance:400000,contract:1400000},
+};
+
+function GridMindROI() {
+  const [industry, setIndustry] = useState("Electric Utility");
+  const [f, setF]               = useState({...GRIDMIND_PRESETS["Electric Utility"]});
+  const [showROI, setShowROI]   = useState(false);
+  const [copied, setCopied]     = useState(false);
+
+  const upd = (k,v) => setF(p => ({...p, [k]: +v}));
+  const setPreset = ind => { setIndustry(ind); setF({...GRIDMIND_PRESETS[ind]}); setShowROI(false); };
+
+  const outageSavings  = f.outages * 0.40 * f.avgOutageCost;
+  const ticketSavings  = f.ticketsMonth * 12 * 0.35 * 85;
+  const complianceSave = f.compliance * 0.60;
+  const opEfficiency   = f.operators * 85000 * 0.25;
+  const yr1            = outageSavings + ticketSavings + complianceSave + opEfficiency;
+  const yr2            = yr1 * 1.15;
+  const yr3            = yr2 * 1.12;
+  const totalBenefit   = yr1 + yr2 + yr3;
+  const totalInvest    = f.contract * 3;
+  const netROI         = totalBenefit - totalInvest;
+  const roiPct         = totalInvest > 0 ? Math.round(netROI / totalInvest * 100) : 0;
+  const payback        = yr1 > 0 ? Math.round(f.contract / (yr1 / 12)) : 0;
+  const maxBar         = Math.max(outageSavings, ticketSavings, complianceSave, opEfficiency, 1);
+  const fmt            = n => "$" + Math.round(n).toLocaleString();
+
+  const inp = { width:"100%", padding:"8px 12px", background:"#0a1120", border:"1px solid #1a2d45",
+    borderRadius:8, color:"#e2e8f0", fontSize:14, outline:"none", boxSizing:"border-box" };
+  const lbl = { fontSize:11, color:"#475569", marginBottom:4, textTransform:"uppercase", letterSpacing:"0.06em", display:"block" };
+  const card = { background:"#060d1c", border:"1px solid #1a2d45", borderRadius:12, padding:"20px 24px" };
+
+  const NF = ({label, k, pre=""}) => (
+    <div style={{marginBottom:14}}>
+      <label style={lbl}>{label}</label>
+      <div style={{display:"flex",alignItems:"center",gap:6}}>
+        {pre && <span style={{color:"#475569",fontSize:13,flexShrink:0}}>{pre}</span>}
+        <input type="number" value={f[k]||0} onChange={e=>upd(k,e.target.value)} style={{...inp,flex:1}}/>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{display:"grid",gridTemplateColumns:"320px 1fr",gap:24,alignItems:"start"}}>
+      {/* Left: Inputs */}
+      <div style={{display:"flex",flexDirection:"column",gap:16}}>
+        <div style={card}>
+          <div style={{fontSize:14,fontWeight:700,color:"#e2e8f0",marginBottom:16}}>⚙️ Configure Customer Profile</div>
+          <div style={{marginBottom:14}}>
+            <label style={lbl}>Industry Vertical</label>
+            <select value={industry} onChange={e=>setPreset(e.target.value)} style={inp}>
+              {Object.keys(GRIDMIND_PRESETS).map(i=><option key={i}>{i}</option>)}
+            </select>
+          </div>
+          <NF label="Annual Outages / Incidents" k="outages"/>
+          <NF label="Avg Cost per Outage" k="avgOutageCost" pre="$"/>
+          <NF label="Operations Staff" k="operators"/>
+          <NF label="Support Tickets / Month" k="ticketsMonth"/>
+          <NF label="Annual Compliance Fine Exposure" k="compliance" pre="$"/>
+          <NF label="GridMind™ Annual License" k="contract" pre="$"/>
+          <button onClick={()=>setShowROI(true)}
+            style={{width:"100%",padding:"12px",background:"linear-gradient(135deg,#059669,#047857)",
+              border:"none",borderRadius:10,color:"#fff",fontSize:14,fontWeight:700,cursor:"pointer",marginTop:8}}>
+            ⚡ Calculate 3-Year ROI
+          </button>
+        </div>
+        <div style={{...card,background:"#022c22",border:"1px solid #065f46"}}>
+          <div style={{fontSize:13,fontWeight:700,color:"#34d399",marginBottom:10}}>GridMind™ AI Capabilities</div>
+          {["Predictive outage prevention — 40% reduction","Automated ticket routing — 35% volume reduction","Real-time compliance monitoring — 60% fine reduction","Operator copilot — natural language to action","Anomaly detection with AI confidence scoring"].map(cap=>(
+            <div key={cap} style={{fontSize:11,color:"#6ee7b7",marginBottom:6}}>✓ {cap}</div>
+          ))}
+        </div>
+      </div>
+
+      {/* Right: Results */}
+      <div>
+        {!showROI ? (
+          <div style={{...card,padding:"60px 40px",textAlign:"center"}}>
+            <div style={{fontSize:48,marginBottom:16}}>⚡</div>
+            <div style={{fontSize:20,fontWeight:700,color:"#334155",marginBottom:8}}>GridMind™ ROI Model</div>
+            <p style={{color:"#1e3a5f",fontSize:14,lineHeight:1.7,marginBottom:24}}>Configure your prospect's operational profile on the left, then calculate their 3-year return on GridMind™ investment.</p>
+            <div style={{display:"flex",gap:8,justifyContent:"center",flexWrap:"wrap"}}>
+              {["40% Fewer Outages","35% Ticket Reduction","60% Compliance Risk Reduction","25% Operator Efficiency"].map(t=>(
+                <span key={t} style={{background:"#022c22",border:"1px solid #065f46",borderRadius:20,padding:"4px 12px",fontSize:11,color:"#34d399"}}>{t}</span>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <div style={{display:"flex",flexDirection:"column",gap:16}}>
+            {/* Summary */}
+            <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+              {[
+                {l:"3-Year Net ROI",   v:fmt(netROI),  sub:roiPct+"% return",   c:"#34d399"},
+                {l:"Year 1 Benefits",  v:fmt(yr1),     sub:"vs "+fmt(f.contract)+" cost", c:"#38bdf8"},
+                {l:"Payback Period",   v:payback+"mo", sub:"break-even",          c:"#a78bfa"},
+              ].map(s=>(
+                <div key={s.l} style={{...card,textAlign:"center"}}>
+                  <div style={{fontSize:10,color:"#3d5a7a",marginBottom:4,textTransform:"uppercase"}}>{s.l}</div>
+                  <div style={{fontSize:28,fontWeight:900,color:s.c}}>{s.v}</div>
+                  <div style={{fontSize:10,color:"#475569"}}>{s.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Breakdown bars */}
+            <div style={card}>
+              <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:16}}>Annual Benefit Breakdown</div>
+              {[
+                {l:"Outage Reduction (40%)",    v:outageSavings,  c:"#34d399", d:`${f.outages} outages × $${(f.avgOutageCost/1000).toFixed(0)}K × 40%`},
+                {l:"Ticket Automation (35%)",   v:ticketSavings,  c:"#38bdf8", d:`${(f.ticketsMonth*12).toLocaleString()} tickets/yr × 35% × $85`},
+                {l:"Compliance Risk (60%)",     v:complianceSave, c:"#a78bfa", d:`$${(f.compliance/1000).toFixed(0)}K exposure × 60%`},
+                {l:"Operator Efficiency (25%)", v:opEfficiency,   c:"#f59e0b", d:`${f.operators} staff × $85K × 25%`},
+              ].map(({l,v,c,d})=>(
+                <div key={l} style={{marginBottom:16}}>
+                  <div style={{display:"flex",justifyContent:"space-between",marginBottom:4}}>
+                    <span style={{fontSize:12,color:"#94a3b8"}}>{l}</span>
+                    <span style={{fontSize:13,fontWeight:700,color:c}}>{fmt(v)}/yr</span>
+                  </div>
+                  <div style={{height:8,background:"#0a1626",borderRadius:4,marginBottom:3}}>
+                    <div style={{height:8,borderRadius:4,background:c,width:Math.round(v/maxBar*100)+"%",transition:"width 0.6s"}}/>
+                  </div>
+                  <div style={{fontSize:10,color:"#334155"}}>{d}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* 3-Year projection */}
+            <div style={card}>
+              <div style={{fontSize:13,fontWeight:700,color:"#e2e8f0",marginBottom:14}}>3-Year Value Projection</div>
+              <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:16}}>
+                {[[1,yr1],[2,yr2],[3,yr3]].map(([yr,val])=>(
+                  <div key={yr} style={{padding:"14px",background:"#070c18",borderRadius:8,border:"1px solid #1a2d45",textAlign:"center"}}>
+                    <div style={{fontSize:10,color:"#3d5a7a",marginBottom:4}}>YEAR {yr}</div>
+                    <div style={{fontSize:22,fontWeight:800,color:"#34d399"}}>{fmt(val)}</div>
+                  </div>
+                ))}
+              </div>
+              <div style={{padding:"16px",background:"#022c22",borderRadius:8,border:"1px solid #065f46",textAlign:"center"}}>
+                <div style={{display:"flex",justifyContent:"space-between",marginBottom:10}}>
+                  <div><div style={{fontSize:10,color:"#065f46"}}>3-YR INVESTMENT</div><div style={{fontSize:18,fontWeight:800,color:"#34d399"}}>{fmt(totalInvest)}</div></div>
+                  <div style={{fontSize:20,color:"#065f46"}}>→</div>
+                  <div><div style={{fontSize:10,color:"#065f46"}}>3-YR BENEFIT</div><div style={{fontSize:18,fontWeight:800,color:"#34d399"}}>{fmt(totalBenefit)}</div></div>
+                </div>
+                <div style={{fontSize:16,fontWeight:900,color:"#34d399"}}>
+                  Net ROI: {fmt(netROI)} ({roiPct}%) · Payback in {payback} months
+                </div>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div style={{textAlign:"center",padding:"24px"}}>
+              <button onClick={()=>setCopied(true)||navigator.clipboard.writeText(`GridMind ROI: ${fmt(netROI)} (${roiPct}%) | Payback: ${payback}mo | Year 1: ${fmt(yr1)} | Industry: ${industry}`).then(()=>setTimeout(()=>setCopied(false),2000))}
+                style={{padding:"12px 28px",background:"#022c22",border:"1px solid #065f46",borderRadius:10,color:"#34d399",fontSize:13,fontWeight:600,cursor:"pointer",marginRight:12}}>
+                {copied ? "✓ Copied!" : "📋 Copy Summary"}
+              </button>
+              <a href="mailto:gridmind@naxonsystems.com?subject=GridMind ROI Discussion"
+                style={{padding:"12px 28px",background:"linear-gradient(135deg,#059669,#047857)",borderRadius:10,color:"#fff",fontSize:13,fontWeight:700,textDecoration:"none",display:"inline-block"}}>
+                Schedule a Demo →
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
 export default function App() {
   const [activeProduct, setActiveProduct] = useState(() => {
     const hash = window.location.hash.replace("#", "");
@@ -446,6 +621,15 @@ export default function App() {
                 textDecoration: "none" }}>
               Contact: gridmind@naxonsystems.com
             </a>
+          </div>
+
+          {/* ROI Calculator Section */}
+          <div style={{ padding: "40px 48px 80px", maxWidth: 1100, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 48 }}>
+              <h2 style={{ fontSize: 36, fontWeight: 800, color: "#e2e8f0", marginBottom: 12 }}>ROI Calculator</h2>
+              <p style={{ color: "#475569", fontSize: 16 }}>Configure your operational profile and see your 3-year return on investment</p>
+            </div>
+            <GridMindROI />
           </div>
         </div>
       )}
